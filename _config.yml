@@ -48,3 +48,6 @@ github_username:  jekyll
 #   - vendor/cache/
 #   - vendor/gems/
 #   - vendor/ruby/
+
+include:
+  - .github/workflows/static.yml
