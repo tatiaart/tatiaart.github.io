@@ -70,7 +70,7 @@ The DMA will operate in circular mode once it is set up. When the buffer is full
 The G031K8 provides us with a rather limited 8k of RAM. In order to maximize the size of the buffer, we can drop the ADC sampling resolution down to 8 bits, meaning that each sample is contained within a byte of memory. It's possible to handle a buffer of 4k without overflowing the RAM. This can be marginally increased by further stripping down arduino code, but this is outside the scope of this example and the increase wouldn't be large either.
  
 The code is mostly the same, except that we will also change the prescaler for the ADC to 1 maximize the sampling speed. A speed change of 1.5 to 3.5 cycles is also required for the channel, as on 1.5 it seems that the data is actually generated faster than it can be sent, and serial communication never completes. This can be remedied by writing our own u(s)art code, but this is outside the scope of this example.
-
+ 
 @@include|advanced_ch/build_opt.h|all|//||C|
 @@include|advanced_ch/advanced_ch.ino|all|//||C| 
 
