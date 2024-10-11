@@ -8,19 +8,17 @@
   </head>
   <body>
     <script>hljs.highlightAll();</script>
-    <h2>Navigation</h2>
-<ul>
-   
-      <li><a href="/Progress/AnalogRead_Oscilloscope/analogRead_oscilloscope_mdcompiled.html">Analog Read Demo</a></li>
-   
-</ul>
-
+    <img src = "/foldback.png" class="fileicon"width = 16px height = 16px><a href = /Progress/AnalogRead_Oscilloscope/.. title="Go Back">Back to /Progress/AnalogRead_Oscilloscope/</a><br>
+    <a href = /Progress/AnalogRead_Oscilloscope.zip title="Click to download" class="download_link">
+      <div>
+      <img src="/download.png" width = 32px height = 32px>
+      <span>Download this package</span></div></a>
     <h1 id="intro">Intro</h1>
-<p>The goal of this example is to create a single channel “oscilloscope”. <br />
-This can be achieved with the use of DataPlotter.<br />
-We will generate an example signal using a PWM pin, then sample it with<br />
-ADC, and send data over Serial to a connected computer running DataPlotter. <br />
-The data will then be transformed into a voltage over time plot, which we can <br />
+<p>The goal of this example is to create a single channel “oscilloscope”. 
+This can be achieved with the use of DataPlotter.
+We will generate an example signal using a PWM pin, then sample it with
+ADC, and send data over Serial to a connected computer running DataPlotter. 
+The data will then be transformed into a voltage over time plot, which we can 
 analyze, for ex. using FFT.</p>
 
 <p>D12 will be used as the PWM output, A1 as the ADC input.
@@ -29,7 +27,7 @@ D12 is connected to A1 directly, and to GND through a 10kOhm resistor.</p>
 <h1 id="basic">Basic</h1>
 <p>This can be easily achieved using simple arduino-core code.</p>
 
-<p><a href="./basic" class="filename_outer"><span class="filename_inner">./basic/basic.ino</span>
+<p><a href="./basic/?hl=basic.ino" class="filename_outer"><span class="filename_inner">./basic/basic.ino</span>
 </a></p>
 
 <pre><code class="language-C">int conversion_result = 0;
@@ -67,35 +65,35 @@ void loop() {
 <h2 id="results">Results</h2>
 <p><img src="dp_basic.png" alt="DataPlotter screenshot with data from running basic.ino" title="DataPlotter Screenshot" /></p>
 
-<p>Sampling Freq: 2.66KHz (According to DataPlotter) <br />
+<p>Sampling Freq: 2.66KHz (According to DataPlotter) 
 PWM frequency can be accurately measured up to ~1.3KHz using FFT in DataPlotter</p>
 
-<p>analogRead initiates a one-off conversion every time we call to it. <br />
-This is rather slow, but the resulting data is nonetheless sufficient <br />
+<p>analogRead initiates a one-off conversion every time we call to it. 
+This is rather slow, but the resulting data is nonetheless sufficient 
 for plotting low-frequency signals.</p>
 
 <h1 id="advanced">Advanced</h1>
 <p>In order to increase sampling speed, we will need to optimize the sampling functions of our code.</p>
 
 <h2 id="setup">Setup</h2>
-<p>By adding a build_opt.h file to the sketch folder, we can customize build options for the arduino core. <br />
-In this case, we will disable arduino’s ADC module completely, as we do not need the options <br />
+<p>By adding a build_opt.h file to the sketch folder, we can customize build options for the arduino core. 
+In this case, we will disable arduino’s ADC module completely, as we do not need the options 
 it provides.</p>
 
-<p><a href="./advanced/build_opt.h" class="filename_outer"><span class="filename_inner">./advanced/build_opt.h</span>
+<p><a href="./advanced/?hl=build_opt.h" class="filename_outer"><span class="filename_inner">./advanced/build_opt.h</span>
 </a></p>
 
 <pre><code class="language-C">-DHAL_ADC_MODULE_ONLY
 </code></pre>
 
-<p>We will set up the ADC to continuously sample CH1. We can then read the ADC data register at any time to <br />
+<p>We will set up the ADC to continuously sample CH1. We can then read the ADC data register at any time to 
 get the last sampled value.</p>
 
 <p>We will also set up the RCC to provide the highest possible core clock of 64mHz.</p>
 
 <p>These init functions can be generated using CubeMX.</p>
 
-<p><a href="./advanced/advanced.ino" class="filename_outer"><span class="filename_inner">./advanced/advanced.ino</span>
+<p><a href="./advanced/?hl=advanced.ino" class="filename_outer"><span class="filename_inner">./advanced/advanced.ino</span>
 </a></p>
 
 <pre><code class="language-C">ADC_HandleTypeDef hadc1;
@@ -253,7 +251,7 @@ void loop() {
 <h2 id="results-1">Results</h2>
 <p><img src="dp_advanced.png" alt="DataPlotter screenshot with data from running advanced.ino" title="DataPlotter Screenshot" /></p>
 
-<p>Sampling Freq: 7.5KHz (~2.8 times increase from basic arduino code) <br />
+<p>Sampling Freq: 7.5KHz (~2.8 times increase from basic arduino code) 
 PWM frequency can be accurately measured up to ~3KHz using FFT in DataPlotter</p>
 
 <p>Letting the ADC peripheral sample in the background while the core is doing communications
@@ -278,12 +276,12 @@ allows for far greater throughput.</p>
 
 <p>The code is mostly the same, except that we will also change the prescaler for the ADC to 1 maximize the sampling speed. A speed change of 1.5 to 3.5 cycles is also required for the channel, as on 1.5 it seems that the data is actually generated faster than it can be sent, and serial communication never completes. This can be remedied by writing our own u(s)art code, but this is outside the scope of this example.</p>
 
-<p><a href="./advanced_ch/build_opt.h" class="filename_outer"><span class="filename_inner">./advanced_ch/build_opt.h</span>
+<p><a href="./advanced_ch/?hl=build_opt.h" class="filename_outer"><span class="filename_inner">./advanced_ch/build_opt.h</span>
 </a></p>
 
 <pre><code class="language-C">-DHAL_ADC_MODULE_ONLY
 </code></pre>
-<p><a href="./advanced_ch/advanced_ch.ino" class="filename_outer"><span class="filename_inner">./advanced_ch/advanced_ch.ino</span>
+<p><a href="./advanced_ch/?hl=advanced_ch.ino" class="filename_outer"><span class="filename_inner">./advanced_ch/advanced_ch.ino</span>
 </a></p>
 
 <pre><code class="language-C">DMA_HandleTypeDef hdma_adc1;
@@ -513,7 +511,7 @@ void loop() {
 <h2 id="results-2">Results</h2>
 <p><img src="dp_advanced_dma.png" alt="DataPlotter screenshot with data from running advanced_ch.ino" title="DataPlotter Screenshot" /></p>
 
-<p>Sampling Freq: 5.337MHz (~702 times increase from the advanced code, ~2052 times increase from the arduino code) <br />
+<p>Sampling Freq: 5.337MHz (~702 times increase from the advanced code, ~2052 times increase from the arduino code) 
 PWM frequency can be accurately measured up to ~2.5MHz using FFT in DataPlotter</p>
 
 <p>Saving the sampled data continously to a buffer without interrupting it every conversion or without waiting for the data to be sent point-by-point yields a massive increase in sampling speed.</p>

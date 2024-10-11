@@ -1,9 +1,9 @@
 # Intro
-The goal of this example is to create a single channel "oscilloscope". \
-This can be achieved with the use of DataPlotter.\
-We will generate an example signal using a PWM pin, then sample it with\
-ADC, and send data over Serial to a connected computer running DataPlotter. \
-The data will then be transformed into a voltage over time plot, which we can \
+The goal of this example is to create a single channel "oscilloscope". 
+This can be achieved with the use of DataPlotter.
+We will generate an example signal using a PWM pin, then sample it with
+ADC, and send data over Serial to a connected computer running DataPlotter. 
+The data will then be transformed into a voltage over time plot, which we can 
 analyze, for ex. using FFT.
 
 D12 will be used as the PWM output, A1 as the ADC input.
@@ -17,24 +17,24 @@ This can be easily achieved using simple arduino-core code.
 ## Results
 ![DataPlotter screenshot with data from running basic.ino](dp_basic.png "DataPlotter Screenshot")
 
-Sampling Freq: 2.66KHz (According to DataPlotter) \
+Sampling Freq: 2.66KHz (According to DataPlotter) 
 PWM frequency can be accurately measured up to ~1.3KHz using FFT in DataPlotter
 
-analogRead initiates a one-off conversion every time we call to it. \
-This is rather slow, but the resulting data is nonetheless sufficient \
+analogRead initiates a one-off conversion every time we call to it. 
+This is rather slow, but the resulting data is nonetheless sufficient 
 for plotting low-frequency signals.
 
 # Advanced
 In order to increase sampling speed, we will need to optimize the sampling functions of our code.
 
 ## Setup
-By adding a build_opt.h file to the sketch folder, we can customize build options for the arduino core. \
-In this case, we will disable arduino's ADC module completely, as we do not need the options \
+By adding a build_opt.h file to the sketch folder, we can customize build options for the arduino core. 
+In this case, we will disable arduino's ADC module completely, as we do not need the options 
 it provides.
 
 @@include|advanced/build_opt.h|all|//||C|
 
-We will set up the ADC to continuously sample CH1. We can then read the ADC data register at any time to \
+We will set up the ADC to continuously sample CH1. We can then read the ADC data register at any time to 
 get the last sampled value.
 
 We will also set up the RCC to provide the highest possible core clock of 64mHz.
@@ -46,7 +46,7 @@ These init functions can be generated using CubeMX.
 ## Results
 ![DataPlotter screenshot with data from running advanced.ino](dp_advanced.png "DataPlotter Screenshot")
 
-Sampling Freq: 7.5KHz (~2.8 times increase from basic arduino code) \
+Sampling Freq: 7.5KHz (~2.8 times increase from basic arduino code) 
 PWM frequency can be accurately measured up to ~3KHz using FFT in DataPlotter
 
 Letting the ADC peripheral sample in the background while the core is doing communications
@@ -77,7 +77,7 @@ The code is mostly the same, except that we will also change the prescaler for t
 ## Results 
 ![DataPlotter screenshot with data from running advanced_ch.ino](dp_advanced_dma.png "DataPlotter Screenshot")
 
-Sampling Freq: 5.337MHz (~702 times increase from the advanced code, ~2052 times increase from the arduino code) \
+Sampling Freq: 5.337MHz (~702 times increase from the advanced code, ~2052 times increase from the arduino code) 
 PWM frequency can be accurately measured up to ~2.5MHz using FFT in DataPlotter
 
 Saving the sampled data continously to a buffer without interrupting it every conversion or without waiting for the data to be sent point-by-point yields a massive increase in sampling speed.

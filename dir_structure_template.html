@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+    <link rel="stylesheet" href="/markdown.css" type="text/css">
+  </head>
+  <body>
+    
+    <script>
+        function getQueryVariable(variable) {
+            var query = window.location.search.substring(1);
+            var vars = query.split("&");
+            for (var i = 0; i < vars.length; i++) {
+                var pair = vars[i].split("=");
+                if (pair[0] == variable) {
+                    return pair[1];
+                }
+            }
+            return (false);
+        }
+    
+        if (getQueryVariable("hl") != "false") {
+            var pid = getQueryVariable("hl");
+            //var url = window.location.protocol + "//" + window.location.host + window.location.pathname;
+            //var newurl = url.split("?")[0];
+            //window.history.replaceState({path:newurl},'',newurl);
+            document.getElementById(""+pid).scrollIntoView({ behavior: "smooth", block: "center", inline:"center"});
+            document.getElementById(""+pid).style = "box-shadow: 0px 0px 10px #4183C4 inset;"}
+        </script>
+  </body>
+</html>
