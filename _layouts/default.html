@@ -4,9 +4,15 @@
     <meta charset="utf-8">
     <title>{{ page.title }}</title>
     <link rel="stylesheet" href="/markdown.css" type="text/css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
   </head>
   <body>
-    <a href = "{{page.dir}}">Back to {{page.dir}}</a>
-    {{ content }}
+    <script>hljs.highlightAll();</script>
+    {% if page.dir.size > 1 %}
+    {% assign backdir = page.dir | split: "" | reverse | join: "" | remove_first: "/" | split: "" | reverse | join: "" %}
+    {% else %}
+    {% assign backdir = page.dir%}
+    {% endif %}
+    <img src = "/foldback.png" class="fileicon"width = 16px height = 16px><a href = "{{backdir}}" title="Go Back">Back to tatiaart.github.io{{backdir}}</a><br>{{ content }}
   </body>
 </html>

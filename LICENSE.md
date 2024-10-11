@@ -1,5 +1,5 @@
 ---
-layout: example
+layout: default
 ---
 
 MIT License

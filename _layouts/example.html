@@ -8,7 +8,10 @@
   </head>
   <body>
     <script>hljs.highlightAll();</script>
-    <img src = "/foldback.png" class="fileicon"width = 16px height = 16px><a href = {{page.dir}}.. title="Go Back">Back to {{page.dir}}</a><br>
+    {% assign fullpath = page.dir | split: "/"%}
+    {% assign lastpath = fullpath | last%}
+    {%assign backpath = page.dir | remove_first:lastpath | split: "" | reverse | join: "" | remove_first: "//"  | split: "" | reverse | join: ""%}
+    <img src = "/foldback.png" class="fileicon"width = 16px height = 16px><a href = "{{backpath}}" title="Go Back">Back to tatiaart.github.io{{backpath}}</a><br>
     <a href = {{page.dir | split: "" | reverse | join: "" | remove_first: "/" | split: "" | reverse | join: ""}}.zip title="Click to download" class="download_link">
       <div>
       <img src="/download.png" width = 32px height = 32px>
