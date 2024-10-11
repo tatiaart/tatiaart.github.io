@@ -8,7 +8,11 @@
   </head>
   <body>
     <script>hljs.highlightAll();</script>
-    {% include nav.html nav=page.nav%}
+    <img src = "/foldback.png" class="fileicon"width = 16px height = 16px><a href = {{page.dir}}.. title="Go Back">Back to {{page.dir}}</a><br>
+    <a href = {{page.dir | split: "" | reverse | join: "" | remove_first: "/" | split: "" | reverse | join: ""}}.zip title="Click to download" class="download_link">
+      <div>
+      <img src="/download.png" width = 32px height = 32px>
+      <span>Download this package</span></div></a>
     {{ content }}
   </body>
 </html>

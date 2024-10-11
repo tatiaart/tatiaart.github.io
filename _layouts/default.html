@@ -3,9 +3,10 @@
   <head>
     <meta charset="utf-8">
     <title>{{ page.title }}</title>
+    <link rel="stylesheet" href="/markdown.css" type="text/css">
   </head>
   <body>
-    {% include nav.html nav=page.nav%}
+    <a href = "{{page.dir}}">Back to {{page.dir}}</a>
     {{ content }}
   </body>
 </html>
