@@ -1,8 +1,14 @@
 <?xml version="1.0"?>
 <data>
     <package>
+        <title>STM32Duino Learning System</title>
+        <path>./_site/Progress</path>
+        <content></content>
+    </package>
+    <package>
         <title>Analog Read Oscilloscope</title>
         <path>./_site/Progress/AnalogRead_Oscilloscope</path>
         <content>analogRead_oscilloscope_mdcompiled.html</content>
     </package>
+
 </data>
