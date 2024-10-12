@@ -6,6 +6,8 @@
     <link rel="stylesheet" href="/markdown.css" type="text/css">
   </head>
   <body>
+
+    
     
     <script>
         function getQueryVariable(variable) {
@@ -20,13 +22,21 @@
             return (false);
         }
     
-        if (getQueryVariable("hl") != "false") {
+        if (getQueryVariable("hl") != false) {
             var pid = getQueryVariable("hl");
             //var url = window.location.protocol + "//" + window.location.host + window.location.pathname;
             //var newurl = url.split("?")[0];
             //window.history.replaceState({path:newurl},'',newurl);
             document.getElementById(""+pid).scrollIntoView({ behavior: "smooth", block: "center", inline:"center"});
-            document.getElementById(""+pid).style = "box-shadow: 0px 0px 10px #4183C4 inset;"}
+            document.getElementById(""+pid).style = "box-shadow: 0px 0px 10px #4183C4 inset,0px 0px 5px #4183C4;"}
+        
+        if (getQueryVariable("return") != false) {
+            var pid = getQueryVariable("return");
+            //var url = window.location.protocol + "//" + window.location.host + window.location.pathname;
+            //var newurl = url.split("?")[0];
+            //window.history.replaceState({path:newurl},'',newurl);
+            document.getElementById("returnbutton").href = document.getElementById("returnbutton").href+"?hl="+pid;
+        }
         </script>
   </body>
 </html>

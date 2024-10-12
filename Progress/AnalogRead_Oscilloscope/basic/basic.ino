@@ -13,7 +13,7 @@ void setup() {
 
   analogWriteFrequency(1000);     // PWM freq
   analogWrite(D12, 128);          // Duty cycle = 128/256 = 50%
-
+  
   Serial.print("$$TSTM32DUINO"); // Intro message 
 }
 
