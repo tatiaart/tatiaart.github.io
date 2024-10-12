@@ -13,6 +13,10 @@
     {% else %}
     {% assign backdir = page.dir%}
     {% endif %}
-    <img src = "/foldback.png" class="fileicon"width = 16px height = 16px><a href = "{{backdir}}" title="Go Back">Back to tatiaart.github.io{{backdir}}</a><br>{{ content }}
+    <a href = "{{backdir}}" title="{{backdir}}">
+      <div class="file_link">
+        <img src = "/foldback.png" class="fileicon"width = 16px height = 16px>
+        Back to tatiaart.github.io{{backdir}}
+      </div></a>{{ content }}
   </body>
 </html>

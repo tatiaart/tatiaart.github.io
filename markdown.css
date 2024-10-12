@@ -121,7 +121,14 @@ pre > code {
 
 .file_link:hover{
     background-color: #d7e7ff;
-    box-shadow: 0px 0px 10px #4183C4 inset;
+    box-shadow: 0px 0px 10px #4183C4 inset,
+    0px 0px 20px #4183C4;
+}
+
+.file_link:active{
+    background-color: #bdd0ec;
+    box-shadow: 0px 0px 5px #4183C4 inset,
+    0px 0px 10px #4183C4;
 }
 
 a {
@@ -152,7 +159,17 @@ a {
 
 .filename_outer:hover .filename_inner{
     background-color: #d7e7ff;
+    box-shadow: 0px 0px 5px #4183C4 inset,
+    0px 0px 5px #4183C4;
+    border: 2px solid #4183C4;
 }
+
+.filename_outer:active .filename_inner{
+    background-color: #bdd0ec;
+    box-shadow: 0px 0px 5px #4183C4 inset,
+    0px 0px 2px #4183C4;
+}
+
 /*
   Five-color theme from a single blue hue.
 */
@@ -215,6 +232,14 @@ a {
     height: 16px;
     margin-right: 5px;
 }
+
+
+.fileicon_big{
+    display: inline-block;
+    height: 32px;
+    margin-right: 10px;
+    vertical-align: text-bottom;
+}
 .filesize{
     float:right;
     white-space-collapse: preserve-spaces;
@@ -227,15 +252,20 @@ a {
     display: inline-block;
 }
 
+.foldername{
+    text-overflow: clip;
+    text-wrap: nowrap;
+    overflow: hidden;
+    font-family: monospace;
+}
+
 @keyframes download_text_hide {
     0%   {background-color: white;
         max-width:32px;}
-    30%  {background-color: white;
-        max-width:300px;}
-    70%  {background-color: white;
-        max-width: 300px;}
-    90%  {background-color: white;
-        max-width:32px;}
+    40%  {background-color: white;
+        max-width:100%;}
+    60%  {background-color: white;
+        max-width:100%;}
     100% {background-color: white;
         max-width:32px;}
   }
@@ -252,13 +282,13 @@ a {
     border-radius: 15px;
     border: 2px solid #2D2D5F;
     width:fit-content;
-    animation: download_text_hide 3s;
-    transition: 0.5s;
+    animation: download_text_hide 3s linear;
+    transition: 1s linear;
     max-width:32px;
 }
 
 .download_link:hover{
-    max-width: 300px;
+    max-width: 100%;
 }
 
 .download_link img{

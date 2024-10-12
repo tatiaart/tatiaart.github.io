@@ -53,9 +53,9 @@ def list_folders(startpath, realpath):
         listf.append(new_dir)
     return listf
 
-def format_link(title, url, icon=None,iconsize=None, tooltipstr=None, comment = None):
+def format_link(title, url, icon=None,iconsize=None, tooltipstr=None, comment = None, id = None):
     text = ""#f"<div id=\"{title}\" class=\"file_link\">"
-    text+=f"<a href = {url} title=\"{(tooltipstr or "")+(title if str(tooltipstr).endswith(" ") else "")}\">"
+    text+=f"<a href = {url} title=\"{(tooltipstr or "")+(title if str(tooltipstr).endswith(" ") else "")}\"{(" id="+"\""+id+"\"")if id else ""}>"
     text+=f"<div id=\"{title}\" class=\"file_link\">"
     if(icon!=None):
         text+=f"<img src = \"/{icon}\" class=\"fileicon\""
@@ -80,18 +80,37 @@ def convert_bytes(num):
         num /= 1024.0
 
 def create_index(folder:directory, template_text:str):
-    to_write = template_text+"\n"
-    folder_name = "tatiaart.github.io"+" / ".join(folder.fullpath[1:].split("/"))
-    to_write+=f"<h2>{folder_name}</h2>\n\n"
+    to_write = "\n".join(template_text.splitlines()[:-1])
+    in_package = None
+    in_package_path = None
+    icon = "fold.png"
+    for x in packages:
+        print(x.path.replace("/_site", ""), "/".join((folder.fullpath.split("/"))))
+        if(x.path.replace("/_site", "") in "/".join((folder.fullpath.split("/")))):
+            in_package = x.title
+            in_package_path = x.path.replace("/_site", "")[1:]
+            to_write+=f"\ndownload: {x.path.replace("/_site", "")[1:]}.zip"
+            to_write+=f"\ndownloadname: {x.title}"
+    if(in_package):
+        folder_name = in_package + " / ".join("/".join(folder.fullpath[1:].split("/")).removeprefix(in_package_path).split("/"))
+        icon = "package.png"
+    else:
+        folder_name = "tatiaart.github.io"+" / ".join(folder.fullpath[1:].split("/"))
     if(len(folder.fullpath[1:].split("/"))==1):
+        icon = "website.png"
+    to_write+="\n---\n"
+    to_write+=f"<h2 class = \"foldername\"><img src = \"/{icon}\" class=\"fileicon_big\" height=32px width = 32px>{folder_name}</h2>\n\n"
+    if(in_package):
+        to_write+= format_link(f"Back to {x.title}", "/".join(folder.fullpath[1:].split("/")[:-1])+".html","foldback.png",iconsize, "Return", "", "returnbutton")
+    elif(len(folder.fullpath[1:].split("/"))==1):
         pass
     elif(len(folder.fullpath[1:].split("/"))==2):
-        to_write+=format_link("../", "/","foldback.png",iconsize, "Return ", "dir ")
+        to_write+=format_link("../", "/","foldback.png",iconsize, "Return ", "dir ", "returnbutton")
     else:
-        to_write+= format_link("../", "/".join(folder.fullpath[1:].split("/")[:-1]),"foldback.png",iconsize, "Return", "dir ")
+        to_write+= format_link("../", "/".join(folder.fullpath[1:].split("/")[:-1])+".html","foldback.png",iconsize, "Return", "dir ", "returnbutton")
     for x in packages:
-        print(folder.fullpath.replace(".","./_site"), x.parent_dir)
         if(folder.fullpath.replace(".","./_site") == x.parent_dir):
+            in_package = True
             to_write+=format_link(f"{x.title}", f"{x.path.replace("/_site", "")[1:]}.html","package.png",iconsize, "Go to ", f"Packaged Example {convert_bytes(os.stat(f".{x.path[1:]}.zip").st_size).rjust(10)}")
     for x in folder.dirs:
         if(x.fullpath.replace(".","./_site") in [i.path for i  in packages]):
@@ -132,12 +151,10 @@ def read_packages():
 
 def create_package(path, content):
     with open(path.replace("./_site", ".")+".html", "w") as html_file:
-        html_file.write(f"<!doctype html>\
-<html>\
-  <head>\
-    <meta http-equiv=\"refresh\" content=\"0; url=./{path.replace("./_site", ".").split("/")[-1]}/{content.split(".")[0]}\" />\
-  </head>\
-</html>")
+        with open("package_redirect_template.html", "r") as template:
+            text = template.read()
+            text = text.replace("@@@DESTINATION@@@", f"./{path.replace("./_site", ".").split("/")[-1]}/{content.split(".")[0]}")
+            html_file.write(text)
     temp_path = tf.mkdtemp()
     shutil.copytree(path, temp_path, dirs_exist_ok=True)
     for root, dirs, files in os.walk(temp_path, topdown=False, followlinks=True):
