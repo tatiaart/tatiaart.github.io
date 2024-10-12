@@ -90,12 +90,11 @@ code, pre {
 code {
     border: 2px solid #2D2D4F;
     margin: 0 2px;
-    padding: 0 5px;
+    padding: 0.5em;
 }
 
 pre {
     border: 2px solid #2D2D5F;
-    line-height: 1.25em;
     overflow: auto;
     padding: 6px 10px;
     z-index: 1;
@@ -105,7 +104,6 @@ pre {
 pre > code {
     border: 0;
     margin: 0;
-    padding: 0;
 }
 
 

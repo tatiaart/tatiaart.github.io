@@ -85,7 +85,6 @@ def create_index(folder:directory, template_text:str):
     in_package_path = None
     icon = "fold.png"
     for x in packages:
-        print(x.path.replace("/_site", ""), "/".join((folder.fullpath.split("/"))))
         if(x.path.replace("/_site", "") in "/".join((folder.fullpath.split("/")))):
             in_package = x.title
             in_package_path = x.path.replace("/_site", "")[1:]
@@ -94,20 +93,28 @@ def create_index(folder:directory, template_text:str):
     if(in_package):
         folder_name = in_package + " / ".join("/".join(folder.fullpath[1:].split("/")).removeprefix(in_package_path).split("/"))
         icon = "package.png"
+        print(folder.fullpath +" is determined to be in package "+in_package_path)
     else:
         folder_name = "tatiaart.github.io"+" / ".join(folder.fullpath[1:].split("/"))
     if(len(folder.fullpath[1:].split("/"))==1):
         icon = "website.png"
     to_write+="\n---\n"
     to_write+=f"<h2 class = \"foldername\"><img src = \"/{icon}\" class=\"fileicon_big\" height=32px width = 32px>{folder_name}</h2>\n\n"
-    if(in_package):
-        to_write+= format_link(f"Back to {x.title}", "/".join(folder.fullpath[1:].split("/")[:-1])+".html","foldback.png",iconsize, "Return", "", "returnbutton")
+    
+    return_path = ""
+    if(len(folder.fullpath[1:].split("/")) in (2,3)):
+        return_path = "/"
+    else:
+        return_path = "/".join(folder.fullpath[1:].split("/")[:-1]).removesuffix("/")+".html"
+        
+        
+    if(in_package and in_package_path!=folder.fullpath[1:]):
+        to_write+= format_link(f"Back to {in_package}", return_path,"foldback.png",iconsize, "Return", "", "returnbutton")
     elif(len(folder.fullpath[1:].split("/"))==1):
         pass
-    elif(len(folder.fullpath[1:].split("/"))==2):
-        to_write+=format_link("../", "/","foldback.png",iconsize, "Return ", "dir ", "returnbutton")
     else:
-        to_write+= format_link("../", "/".join(folder.fullpath[1:].split("/")[:-1])+".html","foldback.png",iconsize, "Return", "dir ", "returnbutton")
+        to_write+=format_link("../", return_path,"foldback.png",iconsize, "Return ", "dir ", "returnbutton")
+        
     for x in packages:
         if(folder.fullpath.replace(".","./_site") == x.parent_dir):
             in_package = True
@@ -150,28 +157,45 @@ def read_packages():
         
 
 def create_package(path, content):
-    with open(path.replace("./_site", ".")+".html", "w") as html_file:
-        with open("package_redirect_template.html", "r") as template:
-            text = template.read()
-            text = text.replace("@@@DESTINATION@@@", f"./{path.replace("./_site", ".").split("/")[-1]}/{content.split(".")[0]}")
-            html_file.write(text)
+    if(content!=None):
+        with open(path.replace("./_site", ".")+".html", "w") as html_file:
+            with open("package_redirect_template.html", "r") as template:
+                text = template.read()
+                text = text.replace("@@@DESTINATION@@@", f"./{path.replace("./_site", ".").split("/")[-1]}/{content.split(".")[0]}")
+                html_file.write(text)
     temp_path = tf.mkdtemp()
+    
     shutil.copytree(path, temp_path, dirs_exist_ok=True)
+    shutil.copyfile("./markdown.css", temp_path+"/markdown.css")
+    print("made "+ temp_path+"/markdown.css")
     for root, dirs, files in os.walk(temp_path, topdown=False, followlinks=True):
         for x in files:
             if x.removesuffix(".html") in dirs:
                 pl.Path.unlink(root+"/"+x)
+            if x.removesuffix(".zip") in dirs:
+                pl.Path.unlink(root+"/"+x)
+                
+    print("Making archive "+path.replace("./_site", ".")+ " of type "+'zip' + " from "+ temp_path)
     shutil.make_archive(path.replace("./_site", "."), 'zip', temp_path)
-    shutil.rmtree(temp_path)
+    #shutil.rmtree(temp_path)
     
     
 
 def main():
     
-    read_packages()
     template_text = ""
     with open("./dir_structure_template.html", "r") as text:
         template_text = text.read()
+        
+    read_packages()
+    
+    for new_pkg in packages:
+        create_package(new_pkg.path, new_pkg.content)
+    for x in list_folders("./_site", "."):
+        create_index(x, template_text)
+        
+    for new_pkg in packages:
+        create_package(new_pkg.path, new_pkg.content)
     for x in list_folders("./_site", "."):
         create_index(x, template_text)
         

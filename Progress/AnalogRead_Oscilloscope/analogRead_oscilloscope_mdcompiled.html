@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <title></title>
     <link rel="stylesheet" href="/markdown.css" type="text/css">
+    <link rel="stylesheet" href="markdown.css" type="text/css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
   </head>
   <body>
@@ -52,7 +53,7 @@ void setup() {
 
   analogWriteFrequency(1000);     // PWM freq
   analogWrite(D12, 128);          // Duty cycle = 128/256 = 50%
-
+  
   Serial.print("$$TSTM32DUINO"); // Intro message 
 }
 
