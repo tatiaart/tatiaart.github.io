@@ -6,6 +6,11 @@
         <content></content>
     </package>
     <package>
+        <title>Pin Definitions</title>
+        <path>./_site/Progress/Pin_Definitions</path>
+        <content>pin_definitions_mdcompiled.html</content>
+    </package>
+    <package>
         <title>Analog Read Oscilloscope</title>
         <path>./_site/Progress/AnalogRead_Oscilloscope</path>
         <content>analogRead_oscilloscope_mdcompiled.html</content>
