@@ -1,0 +1,253 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+    <link rel="stylesheet" href="/markdown.css" type="text/css">
+    <link rel="stylesheet" href="markdown.css" type="text/css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <script>hljs.highlightAll();</script>
+    
+    
+    
+    <a href = "/Progress" title="/Progress">
+      <div class="file_link">
+        <img src = "/foldback.png" class="fileicon"width = 16px height = 16px>
+        Back to tatiaart.github.io/Progress
+      </div></a>
+    <a href = /Progress/SPI_master_tx.zip title="Click to download" class="download_link">
+      <div>
+      <img src="/download.png" width = 32px height = 32px>
+      <span>Download this package</span></div></a>
+    <h1 id="spi-part-1-transmit-only-master">SPI Part 1: Transmit-Only master</h1>
+
+<p>Let’s take a look at the following schematic:</p>
+
+<p><img src="schematic.png" alt="Circuit schematic" title="Schematic" /></p>
+
+<p>#TODO: UPDATE ALL CODE TO REFLECT SCHEMATIC</p>
+
+<p>On each rising edge, the shift register samples the inputs <code class="language-plaintext highlighter-rouge">AND(A, B)</code> and puts the value into <code class="language-plaintext highlighter-rouge">Q1</code>. The value of the rest of <code class="language-plaintext highlighter-rouge">Qx</code> is put into <code class="language-plaintext highlighter-rouge">Qx+1</code>.</p>
+
+<p>The two inputs act as a kind of chip-enable signal: when one is low, the other one’s state will be ignored and 0s are put into the outputs. This is not important right now, as we only have one device, but will become more relevant in following examples.</p>
+
+<h2 id="basic">Basic</h2>
+<p>Here is the basic code that will operate the chip and shift out the required values to operate the 7-segment display by “bit-banging” gpio pins:</p>
+
+<p><a href="./basic?hl=basic.ino&amp;return=basic/basic.ino" class="filename_outer" id="basic/basic.ino" title="Show basic.ino in package"><span class="filename_inner">./basic/basic.ino</span>
+</a></p>
+
+<pre><code class="language-C++">#define SYM_AMOUNT 16
+uint8_t symbol[SYM_AMOUNT] = {0b00000010, 0b10011110, 0b00100100, 0b00001100, 0b10011000, 0b01001000, 0b01000000, 0b00011110, 
+                              0b00000000, 0b00001000, 0b00010000, 0b11000000, 0b01100010, 0b10000100, 0b01100000, 0b01110000};
+
+void send_data(uint8_t data){
+    for(int i = 0; i&lt;8; i++){
+                                
+        if( (data&gt;&gt;i) &amp; 0b1 )   // Set/Reset MOSI
+        {
+            GPIOA-&gt;BSRR |= (0b1&lt;&lt;12);
+        }
+        else
+        {
+            GPIOA-&gt;BRR |= (0b1&lt;&lt;12);
+        }
+
+                                // Pulse CLK
+        GPIOA-&gt;BSRR |= (0b1&lt;&lt;1); 
+        delay(100);             // For demonstration purposes, these delays are exaggerated
+                                // For instant operation, replace with delayMicroseconds(1);
+        GPIOA-&gt;BRR |= (0b1&lt;&lt;1);
+        delay(100);
+    }
+}
+
+void setup() {
+  RCC-&gt;IOPENR |= (11 &lt;&lt; 0);       // Enable GPIO Port A &amp; B clock
+
+  GPIOB-&gt;MODER &amp;= ~(0b11 &lt;&lt; 0);
+  GPIOB-&gt;MODER |=  (0b01 &lt;&lt; 0);   // PB_0 set to output
+
+  GPIOA-&gt;MODER &amp;= ~(0b11 &lt;&lt; 24);
+  GPIOA-&gt;MODER |=  (0b01 &lt;&lt; 24);  // PA_12 set to output
+
+  GPIOA-&gt;MODER &amp;= ~(0b11 &lt;&lt; 2);
+  GPIOA-&gt;MODER |=  (0b01 &lt;&lt; 2);   // PA_1 set to output
+}
+
+uint8_t num = 0;
+
+void loop() {
+    send_data(symbol[num%SYM_AMOUNT]);      // Send symbol
+    num++;                                  // Increment counter
+
+    GPIOB-&gt;BSRR |= (0b1&lt;&lt;0);    // Enable display
+    delay(1000);                // for 1 second
+
+    // GPIOB-&gt;BRR |= (0b1&lt;&lt;0);  // Disable display
+    // ^^^^^^^^^^^^^^^^^^^^^^^
+    // This pin reset for disabling the display is commented out
+    // To showcase how the shift-register gets filled in sequentially in real time
+    // Uncomment it and reduce the delay in send_data() 
+    // For instant operation
+}
+</code></pre>
+
+<p>The numbers 0-9 consequently show up on the seven segment display, and are held on it for a second each.</p>
+
+<p>With this code the MCU uses cycles to directly operate the connected pins to send the data to the shift register. When delays are encountered, necessary for the timings to be tolerated by the shift register, the MCU can not do anything else. This is perfectly fine for this basic example, but in a more complex application, other processing may need to be done, and will be slowed down by communicating with the shift register.</p>
+
+<h2 id="the-spi-peripheral-arduino-style">The SPI peripheral, Arduino style</h2>
+<p>The STM32 feature a SPI peripheral, which can take the work of communicating with the external chip away from the MCU, allowing it to do other computations while communication occurs.</p>
+
+<p>The STM32Duino core exposes this peripheral through the <code class="language-plaintext highlighter-rouge">SPIClass</code></p>
+
+<p><a href="./basic_peripheral?hl=basic_peripheral.ino&amp;return=basic_peripheral/basic_peripheral.ino" class="filename_outer" id="basic_peripheral/basic_peripheral.ino" title="Show basic_peripheral.ino in package"><span class="filename_inner">./basic_peripheral/basic_peripheral.ino</span>
+</a></p>
+
+<pre><code class="language-C++">#define SYM_AMOUNT 16
+uint8_t symbol[SYM_AMOUNT] = {0b00000010, 0b10011110, 0b00100100, 0b00001100, 0b10011000, 0b01001000, 0b01000000, 0b00011110, 
+                              0b00000000, 0b00001000, 0b00010000, 0b11000000, 0b01100010, 0b10000100, 0b01100000, 0b01110000};
+
+#include &lt;SPI.h&gt;
+SPIClass mySPI (PA12, PA11, PA1, PNUM_NOT_DEFINED); //MOSI, MISO, CLK, NSS (not used here)
+              //      ^^^^^
+              //  Note a limitation of STM32Duino core: appropriate MISO pin MUST be defined 
+              //  for the SPI interface, even if never used. 
+              //  It will be configured with it's alternate function set for the SPI peripheral,
+              //  And must be reconfigured if it needs to be used elsewhere.
+
+void setup() {
+  RCC-&gt;IOPENR |= (1 &lt;&lt; 1); // Enable GPIO Port B clock
+
+
+  GPIOB-&gt;MODER &amp;= ~(0b11 &lt;&lt; 0);
+  GPIOB-&gt;MODER |=  (0b01 &lt;&lt; 0); // PB_0 set to output
+
+
+  mySPI.begin(); // Initialize STM32Duino SPI
+                 // Pin configuration is handled automatically
+  mySPI.beginTransaction(SPISettings(25, LSBFIRST, SPI_MODE0)); // Set up transmission settings
+}
+
+uint8_t num = 0;
+
+void loop() {
+    mySPI.transfer(symbol[num%SYM_AMOUNT]); // Send symbol
+    num++;                                  // Increment counter
+
+    GPIOB-&gt;BSRR |= (0b1&lt;&lt;0); // Enable display
+    delay(1000);             // for 1 second
+
+    GPIOB-&gt;BRR |= (0b1&lt;&lt;0);  // Disable display
+}
+</code></pre>
+
+<p>For the SPI peripheral to perform the transfer, the MCU simply loads the value desired to be transferred into the relevant register, and the rest of the communication occurs on the peripheral’s side, freeing up the MCU to do anything else the application may require it to do.</p>
+
+<p>As no other operations are required in this example, the transfer actually happens in blocking mode, where the MCU waits for it to complete before continuing. In a more complex application, the MCU could wait for an interrupt from SPI, indicating transfer complete, or offload the data transfer to DMA, etc. but this is beyound the scope of this example.</p>
+
+<h2 id="the-spi-peripheral-direct-register-access-style">The SPI peripheral, Direct register access style</h2>
+
+<p>To directly access the SPI peripheral without using the arduino core, it has to be configured first:</p>
+
+<ol>
+  <li>The relevant GPIO ports must have their clocks enabled</li>
+  <li>The relevant GPIO pins must be configured in alternate function mode</li>
+  <li>The SPI peripheral must be configured</li>
+  <li>The SPI peripheral must be enabled.</li>
+</ol>
+
+<p>We already know how to set-up the GPIO, so let’s focus on the SPI peripheral:
+It is configured through the SPIx_CR1 and SPIx_CR2 registers. The selected options are highlighted with arrows:</p>
+
+<p><img src="spicr1.png" alt="SPIx_CR1" />
+<img src="spicr2.png" alt="SPIx_CR2" /></p>
+
+<p>This setup yields the following constants required to be written into SPI1_CR1 and SPI1_CR2 respectively:</p>
+<pre><code class="language-C++">SPI1-&gt;CR1 = 0b0000001110111100;
+SPI1-&gt;CR2 = 0b10111  &lt;&lt; 8;
+</code></pre>
+
+<p>After configuration is written, bit 6 of SPI1_CR1 can be set to enable the peripheral. SPI1 is operational.</p>
+
+<p>To begin a transfer, 8 bits of data must be written to SPI1_DR. SPI1 begins the transfer immediately after the write access, and sets the BSY bit in SPI1_SR.</p>
+
+<p><a href="./advanced?hl=advanced.ino&amp;return=advanced/advanced.ino" class="filename_outer" id="advanced/advanced.ino" title="Show advanced.ino in package"><span class="filename_inner">./advanced/advanced.ino</span>
+</a></p>
+
+<pre><code class="language-C++">#define SYM_AMOUNT 16
+uint8_t symbol[SYM_AMOUNT] = {0b00000010, 0b10011110, 0b00100100, 0b00001100, 0b10011000, 0b01001000, 0b01000000, 0b00011110, 
+                              0b00000000, 0b00001000, 0b00010000, 0b11000000, 0b01100010, 0b10000100, 0b01100000, 0b01110000};
+
+void spi_setup(){
+
+  RCC-&gt;IOPENR  |=   (0b1 &lt;&lt; 0);   // Enable GPIO Port A clock
+  RCC-&gt;APBENR2 |=  (0b1 &lt;&lt; 12);   // Enable SPI1 clock
+
+  GPIOA-&gt;MODER &amp;= ~(0b11 &lt;&lt; 24);
+  GPIOA-&gt;MODER |=  (0b10 &lt;&lt; 24);  // PA_12 set to alternate mode
+
+  GPIOA-&gt;MODER &amp;= ~(0b11 &lt;&lt; 2);
+  GPIOA-&gt;MODER |=  (0b10 &lt;&lt; 2);   // PA_1 set to alternate mode
+
+  SPI1-&gt;CR1 = 0b0000001110111100;
+  SPI1-&gt;CR2 = 0b10111  &lt;&lt; 8; // Configure SPI as outlined
+  
+  SPI1-&gt;CR1 |= 0b1    &lt;&lt; 6;  // Enable SPI
+}
+
+void spi_send(uint8_t data){
+  *(volatile uint8_t*)&amp;SPI1-&gt;DR = (data); // Make sure to write only 8 bits
+}
+
+void setup() {
+  RCC-&gt;IOPENR |= (1 &lt;&lt; 1); // Enable GPIO Port B clock
+
+  GPIOB-&gt;MODER &amp;= ~(0b11 &lt;&lt; 0);
+  GPIOB-&gt;MODER |=  (0b01 &lt;&lt; 0); // PB_0 set to output
+
+  spi_setup();
+}
+
+uint8_t num = 0;
+
+void loop() {
+    spi_send(symbol[num%SYM_AMOUNT]); // Send symbol
+    num++;                            // Increment counter
+
+    GPIOB-&gt;BSRR |= (0b1&lt;&lt;0); // Enable display
+    delay(1000);             // for 1 second
+
+    GPIOB-&gt;BRR |= (0b1&lt;&lt;0);  // Disable display
+}
+</code></pre>
+
+<p>As such, the burden of handling communication with the external chip is offloaded to the integrated periphery of the MCU.</p>
+
+
+    <script>
+      function getQueryVariable(variable) {
+          var query = window.location.search.substring(1);
+          var vars = query.split("&");
+          for (var i = 0; i < vars.length; i++) {
+              var pair = vars[i].split("=");
+              if (pair[0] == variable) {
+                  return pair[1];
+              }
+          }
+          return (false);
+      }
+  
+      if (getQueryVariable("hl") != false) {
+          var pid = getQueryVariable("hl");
+          var url = window.location.protocol + "//" + window.location.host + window.location.pathname;
+          var newurl = url.split("?")[0];
+          window.history.replaceState({path:newurl},'',newurl);
+          document.getElementById(""+pid).scrollIntoView({ behavior: "smooth", block: "center", inline:"center"});
+      }
+      </script>
+  </body>
+</html>

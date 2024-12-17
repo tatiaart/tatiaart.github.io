@@ -1,0 +1,203 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+    <link rel="stylesheet" href="/markdown.css" type="text/css">
+    <link rel="stylesheet" href="markdown.css" type="text/css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <script>hljs.highlightAll();</script>
+    
+    
+    
+    <a href = "/Progress" title="/Progress">
+      <div class="file_link">
+        <img src = "/foldback.png" class="fileicon"width = 16px height = 16px>
+        Back to tatiaart.github.io/Progress
+      </div></a>
+    <a href = /Progress/SPI_master_rx.zip title="Click to download" class="download_link">
+      <div>
+      <img src="/download.png" width = 32px height = 32px>
+      <span>Download this package</span></div></a>
+    <h1 id="intro">Intro</h1>
+
+<p><img src="schematic.png" alt="Circuit schematic" title="Schematic" /></p>
+
+<p><a href="./basic?hl=basic.ino&amp;return=basic/basic.ino" class="filename_outer" id="basic/basic.ino" title="Show basic.ino in package"><span class="filename_inner">./basic/basic.ino</span>
+</a></p>
+
+<pre><code class="language-C++">#define SYM_AMOUNT 16
+uint8_t symbol[SYM_AMOUNT] = {0b00000010, 0b10011110, 0b00100100, 0b00001100, 0b10011000, 0b01001000, 0b01000000, 0b00011110, 
+                              0b00000000, 0b00001000, 0b00010000, 0b11000000, 0b01100010, 0b10000100, 0b01100000, 0b01110000};
+
+void send_data(uint8_t data){
+    for(int i = 0; i&lt;8; i++){
+                                // Set/Reset MOSI
+        if( (data&gt;&gt;i) &amp; 0b1 )
+        {
+            GPIOA-&gt;BSRR |= (0b1&lt;&lt;12);
+        }
+        else
+        {
+            GPIOA-&gt;BRR |= (0b1&lt;&lt;12);
+        }
+
+                                // Pulse CLK
+        GPIOA-&gt;BSRR |= (0b1&lt;&lt;1); 
+        delay(100);             // For demonstration purposes, these delays are exaggerated
+                                // For instant operation, replace with delayMicroseconds(1);
+        GPIOA-&gt;BRR |= (0b1&lt;&lt;1);
+        delay(100);
+    }
+}
+
+void setup() {
+  RCC-&gt;IOPENR |= (11 &lt;&lt; 0);       // Enable GPIO Port A &amp; B clock
+
+  GPIOB-&gt;MODER &amp;= ~(0b11 &lt;&lt; 0);
+  GPIOB-&gt;MODER |=  (0b01 &lt;&lt; 0);   // PB_0 set to output
+
+  GPIOA-&gt;MODER &amp;= ~(0b11 &lt;&lt; 24);
+  GPIOA-&gt;MODER |=  (0b01 &lt;&lt; 24);  // PA_12 set to output
+
+  GPIOA-&gt;MODER &amp;= ~(0b11 &lt;&lt; 2);
+  GPIOA-&gt;MODER |=  (0b01 &lt;&lt; 2);   // PA_1 set to output
+}
+
+uint8_t num = 0;
+
+void loop() {
+    send_data(symbol[num%SYM_AMOUNT]);      // Send symbol
+    num++;                                  // Increment counter
+
+    GPIOB-&gt;BSRR |= (0b1&lt;&lt;0);    // Enable display
+    delay(1000);                // for 1 second
+
+    // GPIOB-&gt;BRR |= (0b1&lt;&lt;0);  // Disable display
+    // ^^^^^^^^^^^^^^^^^^^^^^^
+    // This pin reset for disabling the display is commented out
+    // To showcase how the shift-register gets filled in sequentially in real time
+    // Uncomment it and reduce the delay in send_data() 
+    // For instant operation
+}
+</code></pre>
+
+<p><a href="./basic_peripheral?hl=basic_peripheral.ino&amp;return=basic_peripheral/basic_peripheral.ino" class="filename_outer" id="basic_peripheral/basic_peripheral.ino" title="Show basic_peripheral.ino in package"><span class="filename_inner">./basic_peripheral/basic_peripheral.ino</span>
+</a></p>
+
+<pre><code class="language-C++">#define SYM_AMOUNT 16
+uint8_t symbol[SYM_AMOUNT] = {0b00000010, 0b10011110, 0b00100100, 0b00001100, 0b10011000, 0b01001000, 0b01000000, 0b00011110, 
+                              0b00000000, 0b00001000, 0b00010000, 0b11000000, 0b01100010, 0b10000100, 0b01100000, 0b01110000};
+
+#include &lt;SPI.h&gt;
+SPIClass mySPI (PA12, PA11, PA1, PNUM_NOT_DEFINED); //MOSI, MISO, CLK, NSS (not used here)
+              //      ^^^^^
+              //  Note a limitation of STM32Duino core: appropriate MISO pin MUST be defined 
+              //  for the SPI interface, even if never used. 
+              //  It will be configured with it's alternate function set for the SPI peripheral,
+              //  And must be reconfigured if it needs to be used elsewhere.
+
+void setup() {
+  RCC-&gt;IOPENR |= (1 &lt;&lt; 1); // Enable GPIO Port B clock
+
+
+  GPIOB-&gt;MODER &amp;= ~(0b11 &lt;&lt; 0);
+  GPIOB-&gt;MODER |=  (0b01 &lt;&lt; 0); // PB_0 set to output
+
+
+  mySPI.begin(); // Initialize STM32Duino SPI
+                 // Pin configuration is handled automatically
+  mySPI.beginTransaction(SPISettings(25, LSBFIRST, SPI_MODE0)); // Set up transmission settings
+}
+
+uint8_t num = 0;
+
+void loop() {
+    mySPI.transfer(symbol[num%SYM_AMOUNT]); // Send symbol
+    num++;                                  // Increment counter
+
+    GPIOB-&gt;BSRR |= (0b1&lt;&lt;0); // Enable display
+    delay(1000);             // for 1 second
+
+    GPIOB-&gt;BRR |= (0b1&lt;&lt;0);  // Disable display
+}
+</code></pre>
+
+<p><a href="./advanced?hl=advanced.ino&amp;return=advanced/advanced.ino" class="filename_outer" id="advanced/advanced.ino" title="Show advanced.ino in package"><span class="filename_inner">./advanced/advanced.ino</span>
+</a></p>
+
+<pre><code class="language-C++">#define SYM_AMOUNT 16
+uint8_t symbol[SYM_AMOUNT] = {0b00000010, 0b10011110, 0b00100100, 0b00001100, 0b10011000, 0b01001000, 0b01000000, 0b00011110, 
+                              0b00000000, 0b00001000, 0b00010000, 0b11000000, 0b01100010, 0b10000100, 0b01100000, 0b01110000};
+
+void spi_setup(){
+
+  RCC-&gt;IOPENR  |=   (0b1 &lt;&lt; 0);   // Enable GPIO Port A clock
+  RCC-&gt;APBENR2 |=  (0b1 &lt;&lt; 12);   // Enable SPI1 clock
+
+  GPIOA-&gt;MODER &amp;= ~(0b11 &lt;&lt; 24);
+  GPIOA-&gt;MODER |=  (0b10 &lt;&lt; 24);  // PA_12 set to alternate mode
+
+  GPIOA-&gt;MODER &amp;= ~(0b11 &lt;&lt; 2);
+  GPIOA-&gt;MODER |=  (0b10 &lt;&lt; 2);   // PA_1 set to alternate mode
+
+  SPI1-&gt;CR1 = 0b0000001110111100; // TODO: describe
+  
+  SPI1-&gt;CR2  = 0b1    &lt;&lt; 12;
+  SPI1-&gt;CR2 |= 0b0111 &lt;&lt; 8;
+  
+  SPI1-&gt;CR1 |= 0b1    &lt;&lt; 6;
+}
+
+void spi_send(uint8_t data){
+  *(volatile uint8_t*)&amp;SPI1-&gt;DR = (data); // Make sure to write only 8 bits
+}
+
+void setup() {
+  RCC-&gt;IOPENR |= (1 &lt;&lt; 1); // Enable GPIO Port B clock
+
+  GPIOB-&gt;MODER &amp;= ~(0b11 &lt;&lt; 0);
+  GPIOB-&gt;MODER |=  (0b01 &lt;&lt; 0); // PB_0 set to output
+
+  spi_setup();
+}
+
+uint8_t num = 0;
+
+void loop() {
+    spi_send(symbol[num%SYM_AMOUNT]); // Send symbol
+    num++;                            // Increment counter
+
+    GPIOB-&gt;BSRR |= (0b1&lt;&lt;0); // Enable display
+    delay(1000);             // for 1 second
+
+    GPIOB-&gt;BRR |= (0b1&lt;&lt;0);  // Disable display
+}
+</code></pre>
+
+
+    <script>
+      function getQueryVariable(variable) {
+          var query = window.location.search.substring(1);
+          var vars = query.split("&");
+          for (var i = 0; i < vars.length; i++) {
+              var pair = vars[i].split("=");
+              if (pair[0] == variable) {
+                  return pair[1];
+              }
+          }
+          return (false);
+      }
+  
+      if (getQueryVariable("hl") != false) {
+          var pid = getQueryVariable("hl");
+          var url = window.location.protocol + "//" + window.location.host + window.location.pathname;
+          var newurl = url.split("?")[0];
+          window.history.replaceState({path:newurl},'',newurl);
+          document.getElementById(""+pid).scrollIntoView({ behavior: "smooth", block: "center", inline:"center"});
+      }
+      </script>
+  </body>
+</html>

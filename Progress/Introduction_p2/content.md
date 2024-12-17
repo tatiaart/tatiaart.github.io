@@ -1,0 +1,95 @@
+# Basics of STM32duino, Installation
+
+#TODO: Describe STM32Duino, installation, tools
+
+## Arduino
+
+Arduino originated as a school project for teaching programming. Microcontrollers were used as an example of practical and understandable program usage (“tangibility” through LEDs, buttons, and other components). Initially, Arduino was based on ATmega microcontrollers mounted on boards with minimal circuitry. The design of such boards proved to be very useful in practice during electronics development; component manufacturers often adopted this concept – for example, the Nucleo boards by ST. Such designs are also appreciated by hobbyists in their projects.
+
+Arduino uses the C language (more precisely C++) for programming, extended with libraries for single-purpose hardware control (e.g., to set a rectangular signal of a certain frequency on a pin with functions that take only two arguments). These libraries are often referred to as the Wiring language. The Arduino IDE tool is used for writing programs, compiling, and uploading them, with simplicity of use being a priority during its development.
+
+For STM32duino, only the software part is used, specifically the IDE and the Wiring language. The IDE itself can be downloaded from the website www.arduino.cc/en/software; currently, two versions are available (1.y.z and 2.y.z). For STM32duino purposes, version 2 is preferable as it allows debugging via SWD. Additionally, support for IDE version 1 has been discontinued in newer versions of STM32duino.
+
+The Arduino IDE is cross-platform, with native versions available for Linux and macOS. The installation process is straightforward (for completeness, a link to the procedure on arduino.cc is provided). Arduino itself is very popular, and in case of problems, a vast amount of advice and tutorials can usually be found freely on the internet.
+
+Well-developed documentation for the Wiring language can be found on the arduino.cc website. According to this specification, the documented functions should behave the same in STM32duino (understood as "emulating" the behavior of ATmega).
+
+# Installation of STM32duino, Configuration Description
+
+## Installing Arduino
+
+Before installing STM32duino, it is necessary to install the Arduino IDE. The IDE itself can be downloaded from the website www.arduino.cc/en/software. Currently, two versions are available (1.y.z and 2.y.z). For STM32duino purposes, version 2 is preferable as it allows debugging via SWD. Additionally, support for IDE version 1 has been discontinued since STM32duino version 2.8.0. The Arduino IDE is cross-platform, with native versions available for Linux and macOS. The installation process is straightforward (for completeness, a link to the procedure on arduino.cc is provided). Arduino itself is very popular, and in case of issues, a significant amount of relevant advice and tutorials can usually be found freely on the internet.
+
+## Installing STM32duino
+
+After installing the Arduino IDE, you need to install STM32duino itself. The procedure can be found on GitHub (in English). For the purposes of this work, the procedure is also provided in this chapter.
+
+    First, in the menu File → Preferences, set the address https://github.com/stm32duino/BoardManagerFiles/raw/main/package_stmicroelectronics_index.json in the Additional Boards Manager URLs field (highlighted in Figure 1).
+
+    Figure 1: Preferences window of the Arduino IDE application
+
+    Next, in the menu Tools → Board: → Boards Manager... (Figure 2, left), install the package STM32 MCU based boards: (Figure 2, right; it is advisable to use the filter) by clicking the INSTALL button.
+
+    Figure 2: Package installation
+
+    After installation, you need to set the development board being used, in two steps. In the first step, select the board group, e.g., Nucleo or a generic board via Tools → Board: → STM32 MCU based boards (Figure 3, left; Generic STM32G0 series as an example).
+
+    In the second step, select the specific board from the group via Tools → Board part number: (Figure 3, right; STM32G030J6 as an example).
+
+    Figure 3: Board configuration
+
+    Finally, it is advisable to set the upload method via Tools → Upload Method (depending on the specific board, which option is available/ideal). All upload methods except Mass Storage require installing the STM32CubeProg program (the installation procedure is not provided here, it is straightforward; additionally, ST provides sufficient documentation).
+
+## STM32duino Configuration Options in Arduino IDE
+
+After installation, it is advisable to introduce the settings that STM32duino brings to the Arduino IDE. All settings are part of the Tools menu. Figure 4 displays the menu with the individual settings. For completeness, it is appropriate to describe each setting in the following list:
+
+    Board: Selects the group according to the target device; such a group can be the Nucleo board, a generic board (any user-designed board containing a microcontroller of the given series), or another group of boards. This setting has already been shown in the previous chapter.
+
+    Port: Selects the COM port for communication (used for user outputs or for uploading the program). Typically, this needs to be set when using UART, USB CDC class (Virtual COM port), or when uploading firmware via the USART peripheral bootloader.
+
+    Get Board Info: Displays system information about the selected COM port; in the case of the virtual COM port of the ST-Link, its serial number is displayed (which can be useful in some cases).
+
+    Debug symbols and core logs: This setting is important when debugging with ST-Link; it determines whether symbols are included in the compiler output. When debugging, it is advisable to set it to Symbols Enabled (-g).
+
+    Optimize: Sets the optimization level during compilation (standard GCC compiler optimization settings, advisable to set to Smallest -Os).
+
+    Board part number: Sets the specific target device for which the program is to be built. Possible settings are guided by the Board: setting. This setting has already been shown in the previous chapter.
+
+    C Runtime Library: Advanced setting for C libraries, primarily relevant for outputs; typically does not need to be changed.
+
+    Upload method: Determines how the program is uploaded. Documentation for this is available on GitHub. The Mass Storage method uses the capabilities of ST-Link V2.1 for uploading the program without external tools. Other methods use an external tool (labeled STM32CubeProgrammer), and individual settings indicate which peripherals are used for uploading.
+
+    USB support (if available): If the USB peripheral is used, it is necessary to set which class (CDC or HID) should be used to include the corresponding library.
+
+    U(S)ART support: A setting that determines whether USART libraries will be included; if USART is not used in the program (e.g., if USB CDC is used instead), it is advisable to disable it (Disabled (no Serial support)) to save program size.
+
+    USB speed (if available): Advanced setting for STM32 with USB peripherals faster than Full-speed.
+
+## Arduino IDE Environment, Program Examples
+
+The environment itself is quite well documented in the online documentation at Arduino IDE Documentation, and a basic description and first steps are described at Arduino Starting Guide.
+
+The Arduino IDE has an elegantly solved approach to program examples, specifically through the menu File → Examples. In the menu, examples are grouped for better orientation; for STM32duino, examples relevant to the respective board groups are important (e.g., Examples for Generic STM32G0 series).
+
+## Uploading the Program
+
+Before uploading, you need to correctly set the upload method (via Tools → Upload Method, see previous chapters). The upload itself can be performed either through the menu Sketch → Upload or more intuitively by clicking the arrow button (→) on the toolbar. It is advisable to list possible compilation errors with a brief explanation:
+
+    Compilation error: . . . (typically) An error in the program – the program does not make sense from the perspective of the C language (typically a typo, e.g., a missing semicolon).
+
+    Failed uploading: no upload port provided, or Failed uploading: Cannot open port. . . Incorrectly set port. The port can be set in Tools → Port. Specific problems may arise when using CH340 UART-USB converters, which require installing drivers (WCH Downloads). Another specific problem occurs on Linux when the user does not have access to ports (typically, the user needs to be added to the dialout group).
+
+    “. . . ” not found (e.g., NOD_G031K8 not found). Probably, the Mass Storage method was selected and the corresponding board is not connected.
+
+    STM32CubeProg not found. . . STM32CubeProg is not installed, or the environment does not know its path. The solution is described on GitHub.
+
+Other listed errors are associated with STM32CubeProg (they are directly output from STM32CubeProg):
+
+    Error: Activating device: KO. . . This error indicates that the COM port was successfully opened, but the STM32 microcontroller does not respond. At this point, it is good to check which COM port is set, the UART connection (Rx-Tx), and verify whether the device is in the bootloader (check the state of the BOOT0 pin/bit; the complete specification for the bootloader is in application note AN2606).
+
+    Error: No debug probe detected. The upload method is set to SWD (ST-Link), and no ST-Link is connected.
+
+    Error: Target device not found. The upload method is set to USB-DFU, and no corresponding device was found.
+
+To specifically verify the upload method settings, it is good to use a simple example, such as blinking an LED from the following chapter.

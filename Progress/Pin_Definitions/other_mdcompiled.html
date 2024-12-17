@@ -1,0 +1,154 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+    <link rel="stylesheet" href="/markdown.css" type="text/css">
+    <link rel="stylesheet" href="markdown.css" type="text/css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <script>hljs.highlightAll();</script>
+    
+    
+    
+    <a href = "/Progress" title="/Progress">
+      <div class="file_link">
+        <img src = "/foldback.png" class="fileicon"width = 16px height = 16px>
+        Back to tatiaart.github.io/Progress
+      </div></a>
+    <a href = /Progress/Pin_Definitions.zip title="Click to download" class="download_link">
+      <div>
+      <img src="/download.png" width = 32px height = 32px>
+      <span>Download this package</span></div></a>
+    <h2 id="configuring-multiple-pins-at-once">Configuring multiple pins at once</h2>
+
+<p>To further simplify program operation, we can omit Arduino’s config functions entirely and write more efficient code that doesn’t modify every pin’s configuration one by one…</p>
+
+<p>We can skip/combine multiple steps of the <code class="language-plaintext highlighter-rouge">pinMode()</code> function. The first necessity for operating GPIO is enabling relevant port clocks.</p>
+
+<p>Then, using the afforementioned GPIOx_MODER and GPIOx_PUPDR register, we configure the pin’s operating modes.</p>
+
+<p>See code comments for the full description of the configuration sequence.</p>
+
+<p><a href="./advanced?hl=advanced.ino&amp;return=advanced/advanced.ino" class="filename_outer" id="advanced/advanced.ino" title="Show advanced.ino in package"><span class="filename_inner">./advanced/advanced.ino</span>
+</a></p>
+
+<pre><code class="language-C">void setup() {
+  // To configure pins PA_13 and PA_14 as inputs with pullup resistors, and PA_11 and PA_12 as outputs:
+  // 1. No need to translate arduino to stm32 pins (we already know them - PORT_A, pins 11 - 14)
+
+  // 2. Enable the GPIO port A clock
+  RCC-&gt;IOPENR |= (1 &lt;&lt; 0);       // Set bit 0 of the RCC_IOPENR register, enabling port A clock.
+
+  // 3. No need to set port speed since the default value is adequate.
+  // 4. No need to handle alternative pin functions for this MCU
+
+  // 5. Write the configuration registers
+  GPIOA-&gt;MODER &amp;= ~(0b11111010 &lt;&lt; 2 * 11);  // Write the calculated configuration
+
+  GPIOA-&gt;PUPDR &amp;= ~(0b1111 &lt;&lt; 2 * 13);      // Reset bits 26 - 29, and set bit 26 and 28 of the GPIOA_PUPDR register,
+  GPIOA-&gt;PUPDR |=  (0b0101 &lt;&lt; 2 * 13);      // setting pin PA_13 and PA_14's internal pullup mode to 01 (pull-up) 
+}
+
+void loop() {
+  GPIO-&gt;ODR = (((GPIOA-&gt;IDR &gt;&gt; 13) &amp; 0b11) &lt;&lt; 11);
+}
+</code></pre>
+
+<p>Note that multiple pins (e.g. PB_4 and PB_5) were configured with a single register access.</p>
+
+<p>Arduino is just an abstraction layer, so despite not going through Arduino’s functions to configure the pins, we can still use Arduino’s Read/Write to access and modify the pins state.</p>
+
+<h2 id="reading-and-writing-multiple-pins-at-once">Reading and Writing multiple pins at once</h2>
+
+<p>Alas, Arduino’s <code class="language-plaintext highlighter-rouge">digitalRead()</code> and <code class="language-plaintext highlighter-rouge">digitalWrite()</code> are also complicated functions that have to, for example, perform translations from pin mappings, and can only access one pin’s state at a time.</p>
+
+<p>To read and write GPIO pins it is sufficient to access the ports input and output data registers (IDR and ODR respectively):</p>
+
+<p><img src="idrandodr.png" alt="GPIOx_IDR and GPIOx_ODR register description" /></p>
+
+<p><a href="./advanced_reading?hl=advanced_reading.ino&amp;return=advanced_reading/advanced_reading.ino" class="filename_outer" id="advanced_reading/advanced_reading.ino" title="Show advanced_reading.ino in package"><span class="filename_inner">./advanced_reading/advanced_reading.ino</span>
+</a></p>
+
+<pre><code class="language-C">void setup() {
+  RCC-&gt;IOPENR |= (11 &lt;&lt; 1);       // Set bits 1 and 2 of the RCC_IOPENR register, enabling port B and C clocks.
+
+  GPIOB-&gt;MODER &amp;= ~(1111&lt;&lt;8);     // Reset bits 8-11 of the GPIOB_MODER register, setting pin PB_4 and PB_5's mode to 00 (input) 
+  GPIOB-&gt;PUPDR &amp;= ~(1111&lt;&lt;8);
+  GPIOB-&gt;PUPDR |=  (0101&lt;&lt;8);     // Reset bits 8-11, and set bit 8 and 10 of the GPIOB_PUPDR register,
+                                  // setting pin PB_4 and PB_5's internal pullup mode to 01 (pull-up) 
+
+  GPIOC-&gt;MODER &amp;= ~(11&lt;&lt;12);
+  GPIOC-&gt;MODER |=  (01&lt;&lt;12);      // Reset bits 12-13, and set bit 12 of the GPIOC_MODER register,
+                                  // setting pin PC_6 (LED_BUILTIN) mode to output.
+}
+
+uint32_t portb_state;
+
+void loop() {
+  portb_state = GPIOB-&gt;IDR;       // portb_state now contains all of the port B pins' states
+
+  digitalWrite(PC_6, !(portb_state &amp; (1&lt;&lt;4))); // Write the inverse of portb_state's bit 5 (the state of pin 5)
+  delay(500);
+  digitalWrite(PC_6, !(portb_state &amp; (1&lt;&lt;5))); // Write the inverse of portb_state's bit 4 (the state of pin 4)
+  delay(500);
+}
+</code></pre>
+
+<p>We read the whole register content at once, avoiding multiple repeated accesses to it that would be generated by multiple calls to <code class="language-plaintext highlighter-rouge">digitalRead()</code>. This has a big performance impact, and allows easy transfer of the port’s state as an integer value, which can then be bit-masked to read individual pins.</p>
+
+<p>Then, we can simply replace <code class="language-plaintext highlighter-rouge">digitalWrite()</code> with direct manipulation of port C’s output data register.</p>
+
+<p><a href="./advanced_writing?hl=advanced_writing.ino&amp;return=advanced_writing/advanced_writing.ino" class="filename_outer" id="advanced_writing/advanced_writing.ino" title="Show advanced_writing.ino in package"><span class="filename_inner">./advanced_writing/advanced_writing.ino</span>
+</a></p>
+
+<pre><code class="language-C">void setup() {
+  RCC-&gt;IOPENR |= (11 &lt;&lt; 1);       // Set bits 1 and 2 of the RCC_IOPENR register, enabling port B and C clocks.
+
+  GPIOB-&gt;MODER &amp;= ~(1111&lt;&lt;8);     // Reset bits 8-11 of the GPIOB_MODER register, setting pin PB_4 and PB_5's mode to 00 (input) 
+  GPIOB-&gt;PUPDR &amp;= ~(1111&lt;&lt;8);
+  GPIOB-&gt;PUPDR |=  (0101&lt;&lt;8);     // Reset bits 8-11, and set bit 8 and 10 of the GPIOB_PUPDR register,
+                                  // setting pin PB_4 and PB_5's internal pullup mode to 01 (pull-up) 
+
+  GPIOC-&gt;MODER &amp;= ~(11&lt;&lt;12);
+  GPIOC-&gt;MODER |=  (01&lt;&lt;12);      // Reset bits 12-13, and set bit 12 of the GPIOC_MODER register,
+                                  // setting pin PC_6 (LED_BUILTIN) mode to output.
+}
+
+uint32_t portb_state;
+
+void loop() {
+  portb_state = GPIOB-&gt;IDR;       // portb_state now contains all of the port B pins' states
+
+  GPIOC-&gt;ODR = !(portb_state &amp; (1&lt;&lt;4))? 1&lt;&lt;6 : 0; // If bit 4 of portb_state is not set, set bit 6 of GPIOC_ODR, else reset GPIOC_ODR
+  delay(500);
+  GPIOC-&gt;ODR = !(portb_state &amp; (1&lt;&lt;5))? 1&lt;&lt;6 : 0; // If bit 5 of portb_state is not set, set bit 6 of GPIOC_ODR, else reset GPIOC_ODR
+  delay(500);
+}
+</code></pre>
+
+
+    <script>
+      function getQueryVariable(variable) {
+          var query = window.location.search.substring(1);
+          var vars = query.split("&");
+          for (var i = 0; i < vars.length; i++) {
+              var pair = vars[i].split("=");
+              if (pair[0] == variable) {
+                  return pair[1];
+              }
+          }
+          return (false);
+      }
+  
+      if (getQueryVariable("hl") != false) {
+          var pid = getQueryVariable("hl");
+          var url = window.location.protocol + "//" + window.location.host + window.location.pathname;
+          var newurl = url.split("?")[0];
+          window.history.replaceState({path:newurl},'',newurl);
+          document.getElementById(""+pid).scrollIntoView({ behavior: "smooth", block: "center", inline:"center"});
+      }
+      </script>
+  </body>
+</html>

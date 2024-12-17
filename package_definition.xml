@@ -3,17 +3,36 @@
     <package>
         <title>STM32Duino Learning System</title>
         <path>./_site/Progress</path>
-        <content></content>
+        <content>NONE</content>
     </package>
     <package>
-        <title>Pin Definitions</title>
+        <title>Introduction Part 1</title>
+        <path>./_site/Progress/Introduction_p1</path>
+    </package>
+    <package>
+        <title>Introduction Part 2</title>
+        <path>./_site/Progress/Introduction_p2</path>
+    </package>
+    <package>
+        <title>General Purpose Input-Output</title>
         <path>./_site/Progress/Pin_Definitions</path>
-        <content>pin_definitions_mdcompiled.html</content>
+    </package>
+    <package>
+        <title>UART</title>
+        <path>./_site/Progress/U(S)ART</path>
+    </package>
+    <package>
+        <title>SPI Part 1: Transmit-only Master</title>
+        <path>./_site/Progress/SPI_master_tx</path>
+    </package>
+    <package>
+        <title>SPI Part 2: Full-duplex Master</title>
+        <path>./_site/Progress/SPI_master_rx</path>
+        <hidden>True</hidden>
     </package>
     <package>
         <title>Analog Read Oscilloscope</title>
         <path>./_site/Progress/AnalogRead_Oscilloscope</path>
-        <content>analogRead_oscilloscope_mdcompiled.html</content>
     </package>
 
 </data>
