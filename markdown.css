@@ -82,19 +82,21 @@ p, blockquote, ul, ol, dl, li, table, pre {
 }
 
 code, pre {
-    border-radius: 15px;
+    border-radius: 10px;
     background-color: #eaeef3;
     color: inherit;
 }
 
 code {
-    border: 2px solid #2D2D4F;
+    //border: 2px solid #2D2D5F;
+    box-shadow: 1px 1px 5px #AAAAAA;
     margin: 0 2px;
-    padding: 0.5em;
+    padding: 0.3em;
 }
 
 pre {
-    border: 2px solid #2D2D5F;
+    //border: 2px solid #2D2D5F;
+    box-shadow: 1px 1px 5px #AAAAAA;
     overflow: auto;
     padding: 6px 10px;
     z-index: 1;
@@ -104,6 +106,9 @@ pre {
 pre > code {
     border: 0;
     margin: 0;
+    box-shadow: none;
+    border-radius: 15px;
+    padding: 0.5em;
 }
 
 
@@ -142,10 +147,12 @@ a {
 }
 
 .filename_inner{
-    border: 2px solid #2D2D5F;
+    //border: 2px solid #2D2D5F;
+    box-shadow: 1px 1px 5px #AAAAAA;
     display: inline-block;
     border-radius: 15px;
-    padding-bottom: 40px;
+    padding-bottom: 30px;
+    margin-bottom: 5px;
     background: white;
       background-color: white;
     z-index: 0;
@@ -159,7 +166,8 @@ a {
     background-color: #d7e7ff;
     box-shadow: 0px 0px 5px #4183C4 inset,
     0px 0px 5px #4183C4;
-    border: 2px solid #4183C4;
+    //border: 2px solid #2D2D5F;
+    box-shadow: 1px 1px 5px #AAAAAA;
 }
 
 .filename_outer:active .filename_inner{
@@ -229,6 +237,11 @@ a {
     display: inline-block;
     height: 16px;
     margin-right: 5px;
+    border: none;
+    border-radius: 0px;
+    max-width: auto;
+    box-shadow: none;
+    display: inline;
 }
 
 
@@ -237,6 +250,11 @@ a {
     height: 32px;
     margin-right: 10px;
     vertical-align: text-bottom;
+    border: none;
+    border-radius: 0px;
+    max-width: auto;
+    box-shadow: none;
+    display: inline;
 }
 .filesize{
     float:right;
@@ -278,7 +296,8 @@ a {
     background-color: white;
     padding:10px;
     border-radius: 15px;
-    border: 2px solid #2D2D5F;
+    //border: 2px solid #2D2D5F;
+    box-shadow: 1px 1px 5px #AAAAAA;
     width:fit-content;
     animation: download_text_hide 3s linear;
     transition: 1s linear;
@@ -292,7 +311,13 @@ a {
 .download_link img{
     margin: auto;
     vertical-align: middle;
+    border: none;
+    border-radius: 0px;
+    max-width: auto;
+    box-shadow: none;
+    display: inline;
 }
+
 
 .download_link span{
     margin-left: 10px;
@@ -305,4 +330,15 @@ a {
     overflow: hidden;
     text-align: left;
     vertical-align: middle;
+}
+
+img {
+    //border: 2px solid black;
+    border-radius: 15px;
+    max-width: 100%;
+    box-shadow: 1px 1px 5px #AAAAAA;
+    margin: auto;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
 }

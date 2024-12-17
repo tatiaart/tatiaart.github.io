@@ -11,11 +11,14 @@ class package:
     path:str
     content:str
     
-    def __init__(self, title, path:str, content):
+    def __init__(self, title, path:str, content, hidden):
         self.title = title
         self.path = path
         self.content = content
         self.parent_dir = "/".join(path.split("/")[:-1])
+        self.hidden = False
+        if(hidden!=None):
+            self.hidden = True
         
         
 
@@ -84,16 +87,17 @@ def create_index(folder:directory, template_text:str):
     in_package = None
     in_package_path = None
     icon = "fold.png"
+    to_write+=f"\npath: {folder.fullpath}"
     for x in packages:
         if(x.path.replace("/_site", "") in "/".join((folder.fullpath.split("/")))):
             in_package = x.title
             in_package_path = x.path.replace("/_site", "")[1:]
             to_write+=f"\ndownload: {x.path.replace("/_site", "")[1:]}.zip"
-            to_write+=f"\ndownloadname: {x.title}"
+            to_write+=f"\ndownloadname: {str(x.title).replace(":","")}"
     if(in_package):
         folder_name = in_package + " / ".join("/".join(folder.fullpath[1:].split("/")).removeprefix(in_package_path).split("/"))
         icon = "package.png"
-        print(folder.fullpath +" is determined to be in package "+in_package_path)
+        #print(folder.fullpath +" is determined to be in package "+in_package_path)
     else:
         folder_name = "tatiaart.github.io"+" / ".join(folder.fullpath[1:].split("/"))
     if(len(folder.fullpath[1:].split("/"))==1):
@@ -116,6 +120,9 @@ def create_index(folder:directory, template_text:str):
         to_write+=format_link("../", return_path,"foldback.png",iconsize, "Return ", "dir ", "returnbutton")
         
     for x in packages:
+        if(x.hidden):
+            print(x, " is hidden")
+            continue
         if(folder.fullpath.replace(".","./_site") == x.parent_dir):
             in_package = True
             to_write+=format_link(f"{x.title}", f"{x.path.replace("/_site", "")[1:]}.html","package.png",iconsize, "Go to ", f"Packaged Example {convert_bytes(os.stat(f".{x.path[1:]}.zip").st_size).rjust(10)}")
@@ -130,6 +137,8 @@ def create_index(folder:directory, template_text:str):
             continue
         to_write+=format_link(x, folder.fullpath[1:]+"/"+x,"html.png" if x.endswith("html") else "file.png",iconsize, "View " if x.endswith("html") else "Download ",
                               (x.split(".")[-1] if len(x.split("."))>1 else "") + " file" +convert_bytes(os.stat(folder.fullpath.replace(".", './_site')+"/"+x).st_size).rjust(10)+"")
+     
+   # print(to_write)
         
     fname = folder.fullpath
     if(fname == "."):
@@ -145,7 +154,15 @@ import tempfile as tf
 import pathlib as pl
 
 def add_package(pack: ET.Element):
-    new_pkg = package(pack.find("title").text,pack.find("path").text,pack.find("content").text)
+    content = pack.find("content")
+    if content is not None:
+        content_path = content.text
+        if(content_path == "NONE"):
+            content_path = None
+    else:
+        content_path = "content_mdcompiled.md"
+    print(f"Package {pack.find("title").text} ({pack.find("path").text}) will redirect to {content_path}")
+    new_pkg = package(pack.find("title").text,pack.find("path").text, content_path, pack.find("hidden"))
     packages.append(new_pkg)
     
 
@@ -167,7 +184,7 @@ def create_package(path, content):
     
     shutil.copytree(path, temp_path, dirs_exist_ok=True)
     shutil.copyfile("./markdown.css", temp_path+"/markdown.css")
-    print("made "+ temp_path+"/markdown.css")
+    #print("made "+ temp_path+"/markdown.css")
     for root, dirs, files in os.walk(temp_path, topdown=False, followlinks=True):
         for x in files:
             if x.removesuffix(".html") in dirs:
@@ -175,7 +192,7 @@ def create_package(path, content):
             if x.removesuffix(".zip") in dirs:
                 pl.Path.unlink(root+"/"+x)
                 
-    print("Making archive "+path.replace("./_site", ".")+ " of type "+'zip' + " from "+ temp_path)
+    #print("Making archive "+path.replace("./_site", ".")+ " of type "+'zip' + " from "+ temp_path)
     shutil.make_archive(path.replace("./_site", "."), 'zip', temp_path)
     #shutil.rmtree(temp_path)
     
